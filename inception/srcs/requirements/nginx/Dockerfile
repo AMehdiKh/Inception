@@ -15,6 +15,12 @@ RUN		openssl req -x509 -nodes -days 365 -newkey rsa:4096 -sha256 \
 
 COPY	conf/nginx.conf /etc/nginx/nginx.conf
 
+EXPOSE	80
+
 EXPOSE	443
 
 CMD		[ "nginx", "-g", "daemon off;" ]
+
+
+# docker run -d --name nginx -p 8080:443 nginx_image
+# docker build -t nginx_image .
