@@ -5,8 +5,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
 	nginx \
 	openssl
 
-RUN mkdir -p /run/nginx && \
-	mkdir -p /etc/nginx/ssl
+RUN mkdir -p /etc/nginx/ssl
 
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:4096 -sha256 \
 	-keyout /etc/nginx/ssl/nginx.key \
@@ -17,7 +16,7 @@ COPY conf/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 443
 
-CMD [ "nginx", "-g", "daemon off;" ]
+ENTRYPOINT [ "nginx", "-g", "daemon off;" ]
 
 # docker build -t nginx_image .
 # docker run -d --name nginx -p 8080:443 nginx_image

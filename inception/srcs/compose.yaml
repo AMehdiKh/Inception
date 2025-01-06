@@ -1,0 +1,25 @@
+name: inception
+
+services:
+    nginx:
+        container_name: nginx
+        build:
+            context: ./requirements/nginx
+        environment:
+            - DOMAIN_NAME=${DOMAIN_NAME}
+        ports:
+            - 443:443/tcp
+        depends_on:
+            - wordpress
+        restart: always
+    wordpress:
+        container_name: wordpress
+        build:
+            context: ./requirements/wordpress
+        # environment:
+        #     - 
+        # secrets:
+        #     - 
+        # depends_on:
+        #     - mariadb
+        restart: always
