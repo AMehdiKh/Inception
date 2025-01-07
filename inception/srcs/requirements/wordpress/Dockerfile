@@ -20,7 +20,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
 
 RUN chmod +x /usr/local/bin/wp && ln -s /usr/bin/php82 /usr/bin/php
 
-RUN wp core download --skip-content --path=/var/www/
+RUN wp core download --skip-content --path=/var/www/wp/
 
 EXPOSE 9000
 
