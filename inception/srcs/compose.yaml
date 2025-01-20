@@ -1,25 +1,95 @@
 name: inception
 
 services:
+
     nginx:
-        container_name: nginx
         build:
-            context: ./requirements/nginx
+            context: requirements/nginx
+        image: nginx:inception
+        container_name: nginx
+        networks:
+            inception_network:
+        volumes:
+            - wordpress_files:${WP_PATH}
         environment:
-            - DOMAIN_NAME=${DOMAIN_NAME}
+            DOMAIN_NAME: ${DOMAIN_NAME}
         ports:
             - 443:443/tcp
         depends_on:
-            - wordpress
+            wordpress:
+                condition: service_healthy
         restart: always
+
     wordpress:
-        container_name: wordpress
         build:
-            context: ./requirements/wordpress
-        # environment:
-        #     - 
-        # secrets:
-        #     - 
-        # depends_on:
-        #     - mariadb
+            context: requirements/wordpress
+            args:
+                WP_PATH: ${WP_PATH}
+        image: wordpress:inception
+        container_name: wordpress
+        networks:
+            inception_network:
+        volumes:
+            - wordpress_files:${WP_PATH}
+        healthcheck:
+            test: ["CMD", "wp", "core", "is-installed", "--path=${WP_PATH}"]
+            start_period: 10s
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        env_file:
+          - path: .env
+            required: true
+        secrets:
+            - wp_users
+            - db_config
+        depends_on:
+            mariadb:
+                condition: service_healthy
         restart: always
+
+    mariadb:  
+        build:
+            context: requirements/mariadb
+        image: mariadb:inception
+        container_name: mariadb
+        volumes:
+            - database_files:/var/lib/mysql
+        networks:
+            inception_network:
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized"]
+            start_period: 10s
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        environment:
+            DB_CONFIG_FILE: ${DB_CONFIG_FILE}
+        secrets:
+            - db_config
+        restart: always
+
+volumes:
+    wordpress_files:
+      driver: local
+      driver_opts:
+          device: ${WP_VOLUME_PATH}
+          type: none
+          o: bind
+    database_files:
+      driver: local
+      driver_opts:
+          device: ${DB_VOLUME_PATH}
+          type: none
+          o: bind
+
+networks:
+    inception_network:
+        name: inception_network
+        driver: bridge
+
+secrets:
+    wp_users:
+        file: ../secrets/wordpress/wp_users
+    db_config:
+        file: ../secrets/database/db_config

@@ -1,22 +1,37 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Dockerfile                                         :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ael-khel <ael-khel@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/01/16 05:26:34 by ael-khel          #+#    #+#              #
+#    Updated: 2025/01/20 00:53:44 by ael-khel         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-FROM alpine:latest
+# Base image
+FROM alpine:3.21.2
 
+# Install Nginx and dependencies 
 RUN apk update && apk upgrade && apk add --no-cache \
 	nginx \
 	openssl
 
+# Create the necessary directories for SSL certificates
 RUN mkdir -p /etc/nginx/ssl
 
+# Generate self-signed certificate
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:4096 -sha256 \
 	-keyout /etc/nginx/ssl/nginx.key \
 	-out /etc/nginx/ssl/nginx.crt \
 	-subj "/C=MA/ST=Tanger-Tetouan-Hoceima/L=Tetouan/O=1337 Coding School/OU=Inception/CN=ael-khel.42.fr"
 
+# Copy the Nginx configuration file
 COPY conf/nginx.conf /etc/nginx/nginx.conf
 
-EXPOSE 443
+# Expose the Nginx port
+EXPOSE 443/tcp
 
+# Entrypoint to start Nginx in foreground mode
 ENTRYPOINT [ "nginx", "-g", "daemon off;" ]
-
-# docker build -t nginx_image .
-# docker run -d --name nginx -p 8080:443 nginx_image
